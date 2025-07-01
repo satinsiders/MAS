@@ -1,0 +1,8 @@
+{
+  "python.formatting.provider": "black",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "ruff.enable": true,
+  "terminal.integrated.defaultProfile.linux": "bash"
+}
