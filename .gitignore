@@ -42,7 +42,6 @@ crash.log
 
 # Editor directories
 .idea/
-.vscode/
 
 # OS files
 .DS_Store
