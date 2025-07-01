@@ -1,0 +1,9 @@
+{
+  "name": "MAS Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/python:0-3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {}
+  },
+  "postCreateCommand": "az bicep install && pip install -r requirements-dev.txt && pre-commit install"
+}
