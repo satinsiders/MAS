@@ -40,7 +40,7 @@ jobs:
         env:
           PYTHONPATH: "${{ github.workspace }}"
         run: |
-          pytest -q --cov=test --cov-report=xml
+          pytest -q --cov=virtual_department --cov-report=xml
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
