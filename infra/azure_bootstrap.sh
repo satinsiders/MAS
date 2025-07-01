@@ -4,7 +4,7 @@ set -euo pipefail
 # Bootstraps the Azure environment for this project.
 # Ensure you have run 'az login' and have access to the target subscription.
 
-SUBSCRIPTION_ID="<your-subscription-id>"
+SUBSCRIPTION_ID="d14e0f80-11a6-4fd8-927e-c908f9a425c0"
 RESOURCE_GROUP="virtual-dept-rg"
 LOCATION="eastus"
 
