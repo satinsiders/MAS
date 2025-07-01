@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {"id":"T1","description":"Draft README.md with project goal, four-layer agent diagram placeholder, and links to architecture docs.","files":["README.md"]},
+    {"id":"T2","description":"Generate a .gitignore optimized for Python, Terraform, and GitHub Actions artifacts.","files":[".gitignore"]},
+    {"id":"T3","description":"Write CONTRIBUTING.md covering branch strategy and commit-message style.","files":["CONTRIBUTING.md"]},
+    {"id":"T4","description":"Generate CODEOWNERS assigning the project owner as default reviewer for all paths.","files":["CODEOWNERS"]},
+    {"id":"T5","description":"Create .pre-commit-config.yaml with Black, Ruff, isort, and detect-secrets hooks.","files":[".pre-commit-config.yaml"]},
+    {"id":"T6","description":"Add requirements-dev.txt pinning development tooling versions.","files":["requirements-dev.txt"]},
+    {"id":"T7","description":"Generate .github/workflows/ci.yml to run lint, tests, and upload coverage badge.","files":[".github/workflows/ci.yml"]},
+    {"id":"T8","description":"Produce infra/azure_bootstrap.sh script containing AZ CLI commands and guidance comments.","files":["infra/azure_bootstrap.sh"]},
+    {"id":"T9","description":"Author .devcontainer/devcontainer.json referencing Python 3.12 image and installing azcli, Terraform, Bicep CLI; run pre-commit install post-create.","files":[".devcontainer/devcontainer.json"]},
+    {"id":"T10","description":"Create /infrastructure/main.tf (or main.bicep) defining resource group, VNET, and outputs.","files":["infrastructure/main.tf"]},
+    {"id":"T11","description":"Add Makefile targets 'infra-plan' and 'infra-apply'.","files":["Makefile"]},
+    {"id":"T12","description":"Extend CI with infra-plan job running terraform plan or bicep what-if and commenting diff.","files":[".github/workflows/ci.yml"]},
+    {"id":"T13","description":"Create .env.example with placeholder environment variables.","files":[".env.example"]},
+    {"id":"T14","description":"Implement virtual_department/config.py to load environment variables and validate required keys.","files":["virtual_department/config.py"]},
+    {"id":"T15","description":"Generate project directory structure including virtual_department package, agent stubs, and storage module.","files":["virtual_department/__init__.py","virtual_department/__main__.py","virtual_department/agents/__init__.py","virtual_department/agents/c_level.py","virtual_department/agents/head.py","virtual_department/agents/taskmaster.py","virtual_department/agents/subsub.py","virtual_department/storage/__init__.py"]},
+    {"id":"T16","description":"Create tests/test_sanity.py asserting import of all stub classes.","files":["tests/test_sanity.py"]},
+    {"id":"T17","description":"Update __main__.py to parse a --version flag and print commit SHA.","files":["virtual_department/__main__.py"]},
+    {"id":"T18","description":"Add Git tag creation snippet to infra/azure_bootstrap.sh for 'bootstrap-complete'.","files":["infra/azure_bootstrap.sh"]}
+  ]
+}
