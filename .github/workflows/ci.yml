@@ -54,6 +54,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: coverage-xml
+          path: .
       - uses: tj-actions/coverage-badge-py@v2
         with:
           coverage_regex: "TOTAL.*\\s+(\\d+%)"
