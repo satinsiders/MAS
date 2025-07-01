@@ -1,0 +1,49 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+env/
+venv/
+ENV/
+.venv/
+.env/
+*.egg-info/
+.eggs/
+.build/
+dist/
+.mypy_cache/
+.pytest_cache/
+.coverage
+*.cover
+coverage.xml
+.hypothesis/
+.dmypy.json
+.pyre/
+.ropeproject/
+.pytype/
+.ruff_cache/
+
+# Terraform artifacts
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+*.tfplan
+*.tfvars
+*_override.tf
+*_override.tf.json
+
+# GitHub Actions artifacts
+.github/workflows/*.log
+.github/actions/cache/
+
+# Editor directories
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
