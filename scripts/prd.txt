@@ -1,0 +1,112 @@
+# Virtual Department MVP – Product Requirement Document (PRD)
+
+## 1. Purpose / Overview
+
+Create an MVP of a self‑hosted, multi‑agent “virtual department” that can flex between functional areas (Marketing, Curriculum, DevOps) and autonomously ship real deliverables while keeping humans one Slack ping away from override. MVP focuses on the curriculum‑builder workflow and must be production‑ready for limited pilot customers.
+
+## 2. Problem Statement
+
+Small teams need expert‑level output across multiple domains but lack budget and headcount. Current AI copilots are single‑agent and brittle. A layered agent hierarchy with built‑in QA, governance, and billing can deliver higher‑quality artifacts with predictable cost and minimal oversight.
+
+## 3. Goals & Success Metrics
+
+* **Time‑to‑Artifact**: ≤ 5 min from project kickoff to first draft lesson delivered.
+* **Cost Efficiency**: ≤ 25 agent‑hours per full SAT lesson bundle (beats human baseline by 70 %).
+* **Quality Gate Pass Rate**: ≥ 90 % of tasks pass internal rubric without human override on first attempt.
+* **Pilot NPS**: ≥ 45 after first month of use by 3 pilot customers.
+
+## 4. Personas & Target Users
+
+* **C‑level executive** (you): sets strategy, configures budgets.
+* **Curriculum Head**: initiates content projects, reviews agent output.
+* **Ops Engineer**: integrates the system into existing infra, monitors spend.
+
+## 5. Key Use Cases / User Stories
+
+1. *As a Curriculum Head*, I can input a lesson topic and receive a fully‑formatted SAT lesson with practice problems and answer keys.
+2. *As a C‑level*, I can see real‑time spend vs. budget in a dashboard and purchase top‑ups when needed.
+3. *As an Ops Engineer*, I can audit any artifact’s generation chain, including prompts, responses, and pricing data.
+4. *As any user*, I receive Slack notifications when tasks are blocked or artifacts are ready.
+
+## 6. Scope
+
+### 6.1 In‑Scope (MVP)
+
+* Four‑layer agent orchestration framework (C‑Level → Head → Taskmaster → Sub‑sub).
+* Curriculum‑builder workflow with prompt templates, QA rubrics, and formatter agent.
+* Memory/storage: Redis cache, Azure Postgres (JSONB + pgvector), GCS artifact bucket.
+* Basic pricing engine translating tokens → agent‑hours with subscription + overage logic.
+* Secure multitenancy, PII tagging, CMEK encryption.
+* Slack‑bot alerts & minimal React admin console (read‑only for MVP).
+* CI/CD via GitHub Actions, IaC via Terraform.
+
+### 6.2 Out‑of‑Scope (MVP)
+
+* Non‑curriculum departments (Marketing, DevOps) beyond small test projects.
+* Full UI for project creation/editing (CLI or API only for MVP).
+* Advanced billing integrations (Stripe) – use manual invoice.
+
+## 7. Functional Requirements
+
+FR‑1 System shall accept a project JSON payload and enqueue it for C‑Level processing.
+FR‑2 Each agent layer shall evaluate its rubric and either approve, revise, or escalate output.
+FR‑3 Token usage shall be recorded per agent call and aggregated per project.
+FR‑4 When budget\_remaining\_hours ≤ 0, new tasks shall be paused and a Slack alert sent.
+FR‑5 Artifacts shall be stored in GCS with metadata linking to version‑controlled prompts and responses.
+FR‑6 Admin console shall display active queues, budgets, and latest artifacts.
+FR‑7 Audit trail endpoint shall return the full chain of prompts/responses for any artifact.
+
+## 8. Non‑Functional Requirements
+
+NFR‑1 **Performance**: p95 agent call latency ≤ 15 s (depends on LLM provider).
+NFR‑2 **Reliability**: 99.5 % uptime for API and queue workers.
+NFR‑3 **Security**: Data encrypted in transit and at rest (TLS 1.2+, CMEK). Row‑level tenant isolation.
+NFR‑4 **Observability**: Metrics for token burn, latency, retry count, budget drift exposed via Prometheus.
+NFR‑5 **Scalability**: Must handle 10 concurrent projects (growth target) without performance degradation.
+NFR‑6 **Compliance**: Follow OpenAI policy and internal governance for prompt logging and PII handling.
+
+## 9. Assumptions
+
+* Single developer (you) will handle all code with LLM assistance.
+* Azure is primary cloud; abstractions allow future multi‑cloud.
+* GPT‑4o will remain the default model during MVP.
+
+## 10. Constraints / Technical Considerations
+
+* Budget cap of \$300 / month during MVP.
+* No dedicated SRE; alarms must be self‑healing or low‑maintenance.
+* Open‑source licenses for third‑party libraries must be permissive (MIT, Apache 2.0).
+
+## 11. Dependencies
+
+* Azure subscription with quota for OpenAI, Postgres, Storage.
+* Slack workspace and bot token.
+* GitHub repository with CI/CD secrets configured.
+
+## 12. Acceptance Criteria
+
+1. End‑to‑end demo produces SAT lesson bundle passing QA rubric ≥ 90 % of the time.
+2. Admin console shows live project status and spend.
+3. Slack alert triggers when budget depleted or task blocked.
+4. Audit endpoint returns complete prompt/response chain within 1 s.
+
+## 13. Risks & Mitigations
+
+* **Prompt drift**: Implement prompt‑version pinning and regression tests.
+* **Cost overrun**: Hard budget caps and alerting; cheap mock LLM for dev stage.
+* **Model updates breaking output**: Wrap all calls in compatibility adapter; lock model version.
+* **Single‑developer bus factor**: Document setup scripts, CI/CD, and architecture from day one.
+
+## 14. Milestones / Release Plan
+
+* M1 – Bootstrap Foundations complete (this doc’s Step 1).
+* M2 – Core Loop & Memory integrated; synthetic curriculum demo passes.
+* M3 – Pricing & Security layers; cost guardrails functional.
+* M4 – Admin console & Slack‑bot operational.
+* M5 – Pilot ready: three real workflows executed; collect NPS.
+
+## 15. Open Questions
+
+* Should we prioritize SOC 2 controls earlier for enterprise pilots?
+* Which LLM fallback strategy (Azure vs. public OpenAI) best balances cost and latency?
+* Do we need versioned dataset snapshots for audit beyond artifact storage?
