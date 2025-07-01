@@ -1,26 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Bootstraps the Azure environment for this project.
-# Ensure you have run 'az login' and have access to the target subscription.
+usage() {
+  echo "Usage: $0 <subscription-id> [resource-group] [location]" >&2
+  exit 1
+}
 
-SUBSCRIPTION_ID="d14e0f80-11a6-4fd8-927e-c908f9a425c0"
-RESOURCE_GROUP="virtual-dept-rg"
-LOCATION="eastus"
+# Accept positional args or pre-exported vars
+SUBSCRIPTION_ID=${1:-${SUBSCRIPTION_ID:-}}
+RESOURCE_GROUP=${2:-virtual-dept-rg}
+LOCATION=${3:-eastus}
 
-# Set subscription context
+[[ -z "$SUBSCRIPTION_ID" ]] && usage
+command -v az >/dev/null || { echo "Azure CLI not installed"; exit 1; }
+az account show >/dev/null 2>&1 || { echo "Run 'az login' first"; exit 1; }
+
+echo "› Setting subscription ${SUBSCRIPTION_ID}"
 az account set --subscription "$SUBSCRIPTION_ID"
 
-# Create the resource group
-az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+echo "› Creating resource group ${RESOURCE_GROUP} in ${LOCATION}"
+az group create --name "$RESOURCE_GROUP" --location "$LOCATION" --output none
 
-# Register common providers used by infrastructure modules
-az provider register --namespace Microsoft.Storage
-az provider register --namespace Microsoft.Network
+echo "› Registering providers (Storage, Network)"
+for ns in Microsoft.Storage Microsoft.Network; do
+  az provider register --namespace "$ns" --wait
+done
 
-# (Optional) create a service principal for CI/CD pipelines
-# az ad sp create-for-rbac --name virtual-dept-sp --role contributor \
-#   --scopes "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
-
-printf '\nAzure bootstrap complete.\n'
-
+echo -e "\nAzure bootstrap complete."
