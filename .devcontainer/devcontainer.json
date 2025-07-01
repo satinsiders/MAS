@@ -1,9 +1,28 @@
 {
   "name": "MAS Dev Container",
-  "image": "mcr.microsoft.com/devcontainers/python:0-3.12",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {},
-    "ghcr.io/devcontainers/features/terraform:1": {}
+    "ghcr.io/devcontainers/features/terraform:1.8": {},
+    "ghcr.io/devcontainers/features/bicep:latest": {}
   },
-  "postCreateCommand": "az bicep install && pip install -r requirements-dev.txt && pre-commit install"
+  "dockerComposeFile": "docker-compose.yml",
+  "runServices": ["postgres", "redis"],
+  "postCreateCommand": "pip install -r requirements-dev.txt && pre-commit install && make infra-plan || true",
+  "forwardPorts": [6379, 5432],
+  "remoteEnv": {
+    "OPENAI_API_KEY": "${{ secrets.OPENAI_API_KEY }}",
+    "AZURE_CLIENT_ID": "${{ secrets.AZURE_CLIENT_ID }}",
+    "AZURE_TENANT_ID": "${{ secrets.AZURE_TENANT_ID }}",
+    "AZURE_SUBSCRIPTION_ID": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "GitHub.copilot"
+      ]
+    }
+  }
 }
