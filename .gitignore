@@ -46,3 +46,7 @@ crash.log
 # OS files
 .DS_Store
 Thumbs.db
+
+# Infrastructure outputs
+infra/outputs/
+!infra/outputs/.gitkeep
