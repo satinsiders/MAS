@@ -1,5 +1,8 @@
 version: '3.8'
 services:
+  app:
+    image: mcr.microsoft.com/devcontainers/python:3.12
+
   postgres:
     image: postgres:16
     environment:
