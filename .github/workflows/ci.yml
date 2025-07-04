@@ -89,7 +89,9 @@ jobs:
           name: coverage-xml
           path: coverage
       - name: Prepare coverage files
-        run: mv coverage/* .
+        run: |
+          shopt -s dotglob
+          mv coverage/* .
       - uses: tj-actions/coverage-badge-py@v2
         with:
           overwrite: true
