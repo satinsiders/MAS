@@ -1,29 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() {
-  echo "Usage: $0 <subscription-id> [resource-group] [location]" >&2
-  exit 1
+: "${AZURE_SUBSCRIPTION_ID?Set AZURE_SUBSCRIPTION_ID first}" >/dev/null
+
+# Allow overriding defaults via environment variables
+: "${RG_NAME:=virtual-dept-rg}"
+: "${LOCATION:=eastus}"
+: "${VNET_NAME:=virtual-dept-vnet}"
+: "${ADDRESS_PREFIX:=10.0.0.0/16}"
+: "${SUBNET_NAME:=default}"
+: "${SUBNET_PREFIX:=10.0.1.0/24}"
+
+run() {
+  echo "> $*"
+  "$@"
 }
 
-# Accept positional args or pre-exported vars
-SUBSCRIPTION_ID=${1:-${SUBSCRIPTION_ID:-}}
-RESOURCE_GROUP=${2:-virtual-dept-rg}
-LOCATION=${3:-eastus}
+run az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 
-[[ -z "$SUBSCRIPTION_ID" ]] && usage
-command -v az >/dev/null || { echo "Azure CLI not installed"; exit 1; }
-az account show >/dev/null 2>&1 || { echo "Run 'az login' first"; exit 1; }
+run az group create \
+  --name "$RG_NAME" \
+  --location "$LOCATION"
 
-echo "› Setting subscription ${SUBSCRIPTION_ID}"
-az account set --subscription "$SUBSCRIPTION_ID"
+run az network vnet create \
+  --name "$VNET_NAME" \
+  --resource-group "$RG_NAME" \
+  --address-prefix "$ADDRESS_PREFIX" \
+  --subnet-name "$SUBNET_NAME" \
+  --subnet-prefix "$SUBNET_PREFIX"
 
-echo "› Creating resource group ${RESOURCE_GROUP} in ${LOCATION}"
-az group create --name "$RESOURCE_GROUP" --location "$LOCATION" --output none
+mkdir -p infra/outputs
+cat <<JSON > infra/outputs/bootstrap.json
+{
+  "resource_group_id": "$(az group show --name "$RG_NAME" --query id -o tsv)",
+  "vnet_id": "$(az network vnet show --name "$VNET_NAME" --resource-group "$RG_NAME" --query id -o tsv)"
+}
+JSON
 
-echo "› Registering providers (Storage, Network)"
-for ns in Microsoft.Storage Microsoft.Network; do
-  az provider register --namespace "$ns" --wait
-done
+echo "Bootstrap complete. Details written to infra/outputs/bootstrap.json"
 
-echo -e "\nAzure bootstrap complete."
