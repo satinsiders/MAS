@@ -9,6 +9,4 @@ Provide a modular platform where new functional templates can plug in quickly wh
 
 ## Four-Layer Agent Architecture
 
-![Four-layer agent diagram](docs/architecture/four-layer-diagram.png)
-
-Further design details can be found in the [architecture documentation](docs/architecture/README.md).
+The platform is organized into a four-layer hierarchy of agents. Detailed design documentation will be added in a future release.
