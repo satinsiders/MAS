@@ -87,7 +87,9 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: coverage-xml
-          path: .
+          path: coverage
+      - name: Prepare coverage files
+        run: mv coverage/* .
       - uses: tj-actions/coverage-badge-py@v2
         with:
           overwrite: true
