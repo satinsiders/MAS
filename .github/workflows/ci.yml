@@ -90,6 +90,12 @@ jobs:
           path: coverage
       - name: Prepare coverage files
         run: mv coverage/* .
+      - name: Debug artifact contents
+        run: ls -lah . && ls -lah coverage || true
+      - name: Check .coverage and coverage.xml exist
+        run: |
+          test -f .coverage || (echo ".coverage not found!" && exit 1)
+          test -f coverage.xml || (echo "coverage.xml not found!" && exit 1)
       - uses: tj-actions/coverage-badge-py@v2
         with:
           overwrite: true
