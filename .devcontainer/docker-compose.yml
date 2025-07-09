@@ -2,7 +2,12 @@ version: '3.8'
 services:
   app:
     image: mcr.microsoft.com/devcontainers/python:3.12
-
+    command: sleep infinity 
+    volumes:
+      - ..:/workspace:cached
+    depends_on:
+      - postgres
+      - redis
   postgres:
     image: postgres:16
     environment:
