@@ -3,7 +3,7 @@
   "service": "app",
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {},
-    "ghcr.io/devcontainers/features/terraform:1.8": {},
+    "ghcr.io/devcontainers/features/terraform:latest": {"version": "1.8.4"}
     "ghcr.io/devcontainers/features/bicep:latest": {}
   },
   "dockerComposeFile": "docker-compose.yml",
