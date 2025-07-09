@@ -41,6 +41,10 @@ jobs:
           PYTHONPATH: "${{ github.workspace }}"
         run: |
           pytest -q --cov=. --cov-report=xml
+      - name: Debug coverage artifacts
+        run: |
+          ls -lah .
+          ls -lah coverage || true
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
@@ -89,6 +93,19 @@ jobs:
           name: coverage-xml
           path: coverage
           merge-multiple: true
+      - name: Move coverage files if needed
+        run: |
+          if [ -f .coverage ]; then
+            echo "Moving .coverage to coverage/.coverage"
+            mkdir -p coverage
+            mv .coverage coverage/.coverage
+          fi
+          if [ -f coverage.xml ]; then
+            echo "Moving coverage.xml to coverage/coverage.xml"
+            mkdir -p coverage
+            mv coverage.xml coverage/coverage.xml
+          fi
+          ls -lah coverage
       - name: Debug artifact contents
         run: ls -lah . && ls -lah coverage || true
       - name: Check .coverage and coverage.xml exist
