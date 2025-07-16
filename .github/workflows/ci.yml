@@ -45,18 +45,26 @@ jobs:
       - name: Run unit tests with coverage
         env:
           PYTHONPATH: "${{ github.workspace }}"
+          # Make the coverage data file land at repo root reliably.
+          COVERAGE_FILE: ".coverage"
         run: |
           pytest -q --cov=. --cov-report=xml
+          # Re-generate XML explicitly (idempotent) to guard against plugin quirks.
+          coverage xml -i || true
 
-      - name: Ensure coverage.xml was generated
+      - name: Ensure coverage artifacts exist
         run: |
+          ls -lah .
+          test -f .coverage || (echo ".coverage not found after pytest! Did coverage run?" && exit 1)
           test -f coverage.xml || (echo "coverage.xml not found after pytest!" && exit 1)
 
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
           if-no-files-found: error
-          path: coverage.xml
+          path: |
+            coverage.xml
+            .coverage
 
   infra-plan:
     needs: lint-and-test
@@ -113,18 +121,21 @@ jobs:
           echo "coverage/:"
           ls -lah coverage || true
 
-      - name: Ensure coverage.xml present
+      - name: Ensure coverage artifacts present
         run: |
-          test -f coverage/coverage.xml || (echo "coverage.xml not found!" && exit 1)
+          test -f coverage/.coverage || (echo ".coverage not found in artifact!" && exit 1)
+          test -f coverage/coverage.xml || (echo "coverage.xml not found in artifact!" && exit 1)
 
-      - name: Copy coverage.xml to repo root for badge generation
-        run: cp coverage/coverage.xml coverage.xml
+      - name: Move coverage artifacts to repo root for badge generation
+        run: |
+          cp coverage/.coverage .coverage
+          cp coverage/coverage.xml coverage.xml
 
+      # Run from repo root where .coverage now exists.
       - uses: tj-actions/coverage-badge-py@v2
         with:
           overwrite: true
-          # If the action supports an explicit input path, uncomment and set it:
-          # path: coverage.xml
+          # working-directory default is '.', where we placed .coverage
 
       - uses: EndBug/add-and-commit@v9
         with:
