@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main, dev, feature/**]
+    branches:
+      - main
+      - dev
+      - feature/**
   pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -16,17 +20,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
-      - uses: actions/cache@v4
+      - name: Cache pip
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dev dependencies
         run: |
@@ -44,11 +52,10 @@ jobs:
 
       - name: Run unit tests with coverage
         env:
-          PYTHONPATH: "${{ github.workspace }}"
-          # Force where the data file lands so we can reliably artifact it.
-          COVERAGE_FILE: ".coverage"
+          PYTHONPATH: ${{ github.workspace }}
+          COVERAGE_FILE: ".coverage"  # Force where the data file lands so we can reliably artifact it.
         run: |
-          set -e
+          set -euo pipefail
           pytest -q --cov=. --cov-report=xml
           # Merge parallel data files if any (safe even if none).
           coverage combine || true
@@ -57,18 +64,21 @@ jobs:
 
       - name: Ensure coverage artifacts exist
         run: |
+          set -euo pipefail
           echo "Post-test file listing:"
           ls -lah .
           test -f .coverage || (echo "::error::.coverage not found after pytest/coverage combine!" && exit 1)
           test -f coverage.xml || (echo "::error::coverage.xml not found after pytest/coverage xml!" && exit 1)
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
+          include-hidden-files: true              # REQUIRED so .coverage is not dropped
           if-no-files-found: error
           path: |
-            .coverage
-            coverage.xml
+            ./.coverage
+            ./coverage.xml
 
   infra-plan:
     needs: lint-and-test
@@ -78,9 +88,11 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: azure/login@v2
+      - name: Azure login
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -107,12 +119,18 @@ jobs:
 
   coverage-badge:
     needs: lint-and-test
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed for add-and-commit push
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensure we can commit back
 
-      - uses: actions/download-artifact@v4
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
         with:
           name: coverage-xml
           path: coverage
@@ -121,42 +139,50 @@ jobs:
       - name: Debug artifact contents
         run: |
           echo "Downloaded artifact listing:"
-          find coverage -maxdepth 3 -ls || true
+          find coverage -maxdepth 5 -type f -ls || true
 
       - name: Copy coverage files into repo root
+        shell: bash
         run: |
-          set -e
-          # Find .coverage wherever it landed under ./coverage
-          COV_DATA_PATH="$(find coverage -type f -name '.coverage' -print -quit || true)"
-          COV_XML_PATH="$(find coverage -type f -name 'coverage.xml' -print -quit || true)"
+          set -euo pipefail
+          echo "Searching for coverage artifacts..."
+          # Look for merged data file first; fall back to first shard if needed.
+          COV_DATA_PATH="$(find coverage -maxdepth 5 -type f -name '.coverage' -print -quit || true)"
+          if [[ -z "$COV_DATA_PATH" ]]; then
+            COV_DATA_PATH="$(find coverage -maxdepth 5 -type f -name '.coverage.*' -print -quit || true)"
+          fi
+          COV_XML_PATH="$(find coverage -maxdepth 5 -type f -name 'coverage.xml' -print -quit || true)"
 
-          if [ -z "$COV_DATA_PATH" ]; then
+          if [[ -z "$COV_DATA_PATH" ]]; then
             echo "::error::.coverage not found in downloaded artifact!"
-            find coverage -type f -maxdepth 3 || true
+            find coverage -maxdepth 5 -type f || true
             exit 1
           fi
-          if [ -z "$COV_XML_PATH" ]; then
+          if [[ -z "$COV_XML_PATH" ]]; then
             echo "::error::coverage.xml not found in downloaded artifact!"
-            find coverage -type f -maxdepth 3 || true
+            find coverage -maxdepth 5 -type f || true
             exit 1
           fi
 
           cp "$COV_DATA_PATH" .coverage
           cp "$COV_XML_PATH" coverage.xml
 
-          echo "After copy:"
+          echo "After copy to repo root:"
           ls -lah .
+          echo "First 20 lines of coverage.xml:"
           head -20 coverage.xml || true
 
-      - uses: tj-actions/coverage-badge-py@v2
+      - name: Generate coverage badge
+        uses: tj-actions/coverage-badge-py@v2
         with:
-          overwrite: true
-          # working-directory default is repo root (where .coverage now lives)
+          overwrite: true  # working-directory defaults to repo root
 
-      - uses: EndBug/add-and-commit@v9
+      - name: Commit badge
+        uses: EndBug/add-and-commit@v9
         with:
           add: "*.svg"
           message: "chore(ci): update coverage badge [skip ci]"
+          push: true
 
   notify-failure:
     needs: [lint-and-test, coverage-badge]
@@ -167,7 +193,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "\ud83d\udea8 CI failed on ${{ github.repository }} – <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|details>"
+              "text": "\ud83d\udea8 CI failed on ${{ github.repository }} \u2013 <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|details>"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK }}
