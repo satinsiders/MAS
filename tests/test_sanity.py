@@ -3,6 +3,7 @@ def test_sanity(monkeypatch):
         "OPENAI_API_KEY",
         "AZURE_CLIENT_ID",
         "AZURE_TENANT_ID",
+        "AZURE_CLIENT_SECRET",
         "AZURE_SUBSCRIPTION_ID",
         "POSTGRES_USER",
         "POSTGRES_PASSWORD",
