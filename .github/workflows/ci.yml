@@ -45,26 +45,43 @@ jobs:
       - name: Run unit tests with coverage
         env:
           PYTHONPATH: "${{ github.workspace }}"
-          # Make the coverage data file land at repo root reliably.
+          # Force coverage data to land in repo root under .coverage
           COVERAGE_FILE: ".coverage"
         run: |
+          # Run pytest with coverage
           pytest -q --cov=. --cov-report=xml
-          # Re-generate XML explicitly (idempotent) to guard against plugin quirks.
-          coverage xml -i || true
+          # Merge any parallel coverage data files (safe even if none)
+          coverage combine || true
+          # Rebuild XML from merged data (idempotent)
+          coverage xml -i
 
       - name: Ensure coverage artifacts exist
         run: |
+          echo "Listing repo root after tests:"
           ls -lah .
-          test -f .coverage || (echo ".coverage not found after pytest! Did coverage run?" && exit 1)
-          test -f coverage.xml || (echo "coverage.xml not found after pytest!" && exit 1)
+          if [ ! -f .coverage ]; then
+            echo "::error::.coverage not found after pytest/coverage combine!"
+            echo "Showing any coverage data fragments:"
+            ls -lah .coverage* || true
+            exit 1
+          fi
+          if [ ! -f coverage.xml ]; then
+            echo "::error::coverage.xml not found after pytest/coverage xml!"
+            exit 1
+          fi
+
+      - name: Stage coverage artifacts for upload
+        run: |
+          mkdir -p coverage-artifacts
+          cp .coverage coverage-artifacts/.coverage
+          cp coverage.xml coverage-artifacts/coverage.xml
+          ls -lah coverage-artifacts
 
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
           if-no-files-found: error
-          path: |
-            coverage.xml
-            .coverage
+          path: coverage-artifacts
 
   infra-plan:
     needs: lint-and-test
@@ -118,24 +135,35 @@ jobs:
         run: |
           echo "Top level:"
           ls -lah .
-          echo "coverage/:"
+          echo "Downloaded coverage artifact contents:"
           ls -lah coverage || true
+          echo "coverage-artifacts subdir (if present):"
+          ls -lah coverage/coverage-artifacts || true
 
-      - name: Ensure coverage artifacts present
+      - name: Normalize coverage artifact paths
         run: |
-          test -f coverage/.coverage || (echo ".coverage not found in artifact!" && exit 1)
-          test -f coverage/coverage.xml || (echo "coverage.xml not found in artifact!" && exit 1)
+          # If upload created a nested coverage-artifacts dir, handle that:
+          if [ -d coverage/coverage-artifacts ]; then
+            cp coverage/coverage-artifacts/.coverage .coverage
+            cp coverage/coverage-artifacts/coverage.xml coverage.xml
+          else
+            cp coverage/.coverage .coverage
+            cp coverage/coverage.xml coverage.xml
+          fi
+          echo "After copy:"
+          ls -lah .
+          echo "Showing coverage head:"
+          head -20 coverage.xml || true
 
-      - name: Move coverage artifacts to repo root for badge generation
+      - name: Ensure coverage data present
         run: |
-          cp coverage/.coverage .coverage
-          cp coverage/coverage.xml coverage.xml
+          test -f .coverage || (echo ".coverage not found after copy!" && exit 1)
+          test -f coverage.xml || (echo "coverage.xml not found after copy!" && exit 1)
 
-      # Run from repo root where .coverage now exists.
       - uses: tj-actions/coverage-badge-py@v2
         with:
           overwrite: true
-          # working-directory default is '.', where we placed .coverage
+          # working-directory defaults to "."
 
       - uses: EndBug/add-and-commit@v9
         with:
