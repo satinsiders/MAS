@@ -1,6 +1,6 @@
-resource_group_name = "mas-dev-rg"
+resource_group_name = "virtual-dept-rg"
+vnet_name           = "virtual-dept-vnet"
 location            = "eastus"
-vnet_name           = "mas-dev-vnet"
 address_prefix      = "10.0.0.0/16"
 subnet_name         = "default"
 subnet_prefix       = "10.0.1.0/24"
