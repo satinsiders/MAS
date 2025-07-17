@@ -91,6 +91,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.x
+
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -98,8 +103,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+
+      - name: Terraform init
+        run: make init
+
       - name: Terraform plan
-        run: make infra-plan
+        run: make plan
 
       - name: Show plan
         run: terraform -chdir=infrastructure show -no-color plan.out > plan.txt
