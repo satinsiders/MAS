@@ -1,4 +1,4 @@
-resource_group_name  = "tfstate-rg"
-storage_account_name = "tfstate"
-container_name       = "tfstate"
+resource_group_name  = "virtual-dept-tfstate-rg-dev"
+storage_account_name = "virtual-dept-tfstate-sa-dev"
+container_name       = "virtual-dept-tfstate-dev"
 key                  = "terraform.tfstate"
