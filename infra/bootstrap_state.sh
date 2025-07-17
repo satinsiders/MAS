@@ -4,8 +4,8 @@ set -euo pipefail
 : "${AZURE_SUBSCRIPTION_ID?Need AZURE_SUBSCRIPTION_ID}" >/dev/null
 
 # Allow overrides via env vars
-: "${TFSTATE_RG:=rg-tfstate-dev}"
-: "${TFSTATE_SA:=tfstatevddev}"          # 3–24 lowercase letters/numbers only
+: "${TFSTATE_RG:=tfstate-rg}"
+: "${TFSTATE_SA:=tfstate}"          # 3–24 lowercase letters/numbers only
 : "${TFSTATE_CONTAINER:=tfstate}"
 : "${LOCATION:=eastus}"
 
