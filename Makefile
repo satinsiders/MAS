@@ -1,8 +1,20 @@
-.PHONY: infra-plan infra-apply
+.PHONY: infra-plan infra-apply init fmt validate
 
-infra-plan:
-terraform -chdir=infrastructure init -upgrade
-terraform -chdir=infrastructure plan -out=plan.out
+infra-plan: init fmt validate
+	terraform -chdir=infrastructure plan \
+	  -var-file=env/dev/terraform.tfvars \
+	  -out=plan.out
 
 infra-apply:
-terraform -chdir=infrastructure apply "plan.out"
+	terraform -chdir=infrastructure apply "plan.out"
+
+init:
+	terraform -chdir=infrastructure init \
+	  -backend-config=env/dev/backend_override.tfvars \
+	  -upgrade
+
+fmt:
+	terraform -chdir=infrastructure fmt -recursive
+
+validate:
+	terraform -chdir=infrastructure validate
